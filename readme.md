@@ -143,12 +143,28 @@ git clone --depth 1 https://github.com/jackyzhangok/okgo.git ~/.agents/skills/ok
 
 > 装多了技能容易被别的技能抢走；这时在提示词里点名「用 okgo 技能」即可纠偏。
 
+**许愿式样例（复制即用）：**
+
+```text
+用 okgo 技能，许愿模式：做一个命令行待办工具，支持增删改查，数据存本地，一路做完，不用问我。
+```
+
+> 也可以在 `/` 菜单选中 `okgo` 后，接着输入「许愿模式：…」；触发语要和需求在同一条消息里。
+
 #### Cursor
 
 1. 在 Agent 聊天框输入 `/`，搜索并选择 `okgo` —— 只附加到这一条消息；
 2. 输入 `@okgo` 把它作为上下文附加；
 3. 想整个会话常驻：选中后按 `Option+Enter`（Mac）/ `Alt+Enter`（Windows）作为 Custom Mode；
 4. 启动时 Cursor 自动发现 `.cursor/skills/`、`.agents/skills/`，也会按描述自行判断。
+
+**许愿式样例（复制即用）：**
+
+```text
+/okgo 许愿模式：做一个命令行待办工具，支持增删改查，数据存本地，一路做完，不用问我。
+```
+
+> 用 `@okgo` 时同理：`@okgo 许愿模式：做一个…，一路做完，不用问我。`
 
 #### Codex CLI / IDE
 
@@ -157,6 +173,12 @@ git clone --depth 1 https://github.com/jackyzhangok/okgo.git ~/.agents/skills/ok
 3. 不提 `$okgo` 时，Codex 也会按 `description` 隐式选择；
 4. 项目级技能放 `.codex/skills/okgo/` 或 `.agents/skills/okgo/`，Codex 从仓库根扫描。
 
+**许愿式样例（复制即用）：**
+
+```text
+$okgo 许愿模式：做一个命令行待办工具，支持增删改查，数据存本地，一路做完，不用问我。
+```
+
 > Codex 的 `/` 是内置命令（`/skills`、`/model`、`/plan` 等），**不能**用 `/okgo` 调用自定义技能——必须用 `$okgo`。
 
 #### DSH
@@ -164,6 +186,14 @@ git clone --depth 1 https://github.com/jackyzhangok/okgo.git ~/.agents/skills/ok
 1. 输入框输入 `/` 选择技能（发送后自动加载），或直接说「使用 okgo 技能」；
 2. 模型侧：会话注入技能目录（名称+描述），命中后调用 `skill` 工具读正文；
 3. 默认 `okgo` 对模型可见、`/okgo` 可调用；如需限制，在 frontmatter 加 `disable-model-invocation: true`（模型不可见）或 `user-invocable: false`（`/` 不可用）。
+
+**许愿式样例（复制即用）：**
+
+```text
+/okgo 许愿模式：做一个命令行待办工具，支持增删改查，数据存本地，一路做完，不用问我。
+```
+
+> 不写斜杠也可以：`使用 okgo 技能，许愿模式：做一个…，一路做完，不用问我。`
 
 ### 3.4 没触发时怎么办
 
