@@ -2,6 +2,7 @@
 
 > “**许愿式项目开发**”[新项目从零到交付]的标准流程包：**6 个阶段、3 道闸门、1 套文档**。
 > 一份技能，四种工具通用：**WorkBuddy / Cursor / Codex / DeepSeek Harness（DSH）**，也兼容 Claude Code 等任何支持 `SKILL.md` 的 agent。
+> 新项目里说一句「按 okgo 启动」，它会**自动建立 `AGENTS.md`**，不用你复制模板。
 > 本文件是**使用方法与流程图**；细则看 `references/`，片段模板看 `assets/`。
 
 ---
@@ -32,7 +33,7 @@ okgo/
 ├── readme.md                       # 本文件：安装、使用方法、完整流程
 ├── references/
 │   ├── workflow-manual.md          # 完整流程手册 → 落地为 docs/architecture/workflow.md
-│   └── agents-template.md          # 项目规则全文模板 → 落地为项目根 AGENTS.md
+│   └── agents-template.md          # 项目规则模板 → agent 自动生成为项目根 AGENTS.md
 └── assets/
     ├── task-contract.md            # 任务契约片段
     ├── acceptance-checklist.md     # 验收清单片段（功能/边界/集成/卫生）
@@ -150,6 +151,7 @@ ls ~/.dsh/skills/okgo/{SKILL.md,readme.md,references,assets}
 
 行为信号（出现任意两条，说明已加载）：
 
+- 发现没有 `AGENTS.md` 时**直接创建**，而不是让你去复制模板；
 - 先要验收标准、先问 5 个问题，而不是直接写代码；
 - 提到阶段、闸门、`AGENTS.md`、验收清单；
 - 主动去读 `references/workflow-manual.md` 或 `assets/*`；
@@ -161,24 +163,29 @@ ls ~/.dsh/skills/okgo/{SKILL.md,readme.md,references,assets}
 
 ## 4. 使用方法：落地到新项目（三步）
 
-### 步骤 1：立规则
+### 步骤 1：立规则（agent 自动完成，不用复制）
 
-把 `references/agents-template.md` 复制为**项目根** `AGENTS.md`：
+在新项目里对 agent 说一句「按 okgo 启动这个项目」，它会：
+
+1. **检测**：项目根或仓库根已有 `AGENTS.md` 就直接用；都没有才创建；
+2. **生成**：读取 `references/agents-template.md`，写入项目根 `AGENTS.md`；
+3. **填充**：项目名（`package.json` 的 `name` 或目录名）、包管理器（锁文件）、语言/框架/数据库（依赖与配置文件）、命令（只填构建文件里**真实存在**的脚本）；
+4. **标记未知**：无法确定的写 `待确认`，文末列「待确认项」，不编造命令；
+5. **回报**：已创建、填了 N 项、待确认 M 项。
+
+你只需要确认它列出的待确认项。**已有 `AGENTS.md` 不会被覆盖**：它会先读，列出缺哪些章节/门禁，再问你要不要补。
+
+手动兜底（agent 不可用时）：
 
 ```bash
 cp ~/.agents/skills/okgo/references/agents-template.md ./AGENTS.md
 ```
 
-然后：
-
-1. 替换全部 `{{PLACEHOLDER}}`（见第 8 节）；
-2. 删除不适用的门禁条目——**但 `lint` / `type-check` / `test` / `build` / 依赖检查不得删**；
-3. 没有 UI 的项目，删掉 `frontend-design` / `interface-design` / `webapp-testing` 与 `artifacts/ui` 相关条款；
-4. 提交，并让所有人和 AI 都以它为准（`CLAUDE.md` 存在时只做指向它的指针）。
+然后替换全部 `{{PLACEHOLDER}}`（见第 8 节）；删除不适用的门禁——**但 `lint` / `type-check` / `test` / `build` / 依赖检查不得删**；没有 UI 的项目删掉设计/截图相关条款。
 
 ### 步骤 2：立流程
 
-把 `references/workflow-manual.md` 复制为 `docs/architecture/workflow.md`：
+对 agent 说「落地流程手册」即可（它会复制并登记索引）；手动兜底：
 
 ```bash
 mkdir -p docs/architecture docs/design
@@ -404,6 +411,12 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 **Q：必须把两份文档都放进项目吗？**
 A：`AGENTS.md` 必须（规则要被 agent 读到）；`docs/architecture/workflow.md` 强烈建议（人和 AI 都靠它对齐顺序）。只放一份时优先 `AGENTS.md`。
+
+**Q：新项目还没有 `AGENTS.md`，要我先复制模板吗？**
+A：不用。agent 会自动检测并创建；连 `package.json` 都没有的空仓库也能生成，命令项标 `待确认`，等阶段 0 定稿再补。你只需要回答它问的那 2–3 个问题。
+
+**Q：会不会覆盖我已有的 `AGENTS.md`？**
+A：不会。检测到已存在就只读，列出缺哪些章节/门禁，问你要不要补；不会整体覆盖。
 
 **Q：和 Cursor rules / CLAUDE.md 冲突怎么办？**
 A：只保留一份权威规则。`CLAUDE.md`、`.cursor/rules` 里写「规则见 AGENTS.md」，正文不复制，避免两份漂移。

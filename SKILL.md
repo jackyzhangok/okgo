@@ -1,6 +1,6 @@
 ---
 name: okgo
-description: Use when starting a project from scratch, rebuilding a module, or standing up a new subsystem; when asked what order to build things in, what documents a new repo needs, or how to write AGENTS.md rules; or when a project has no acceptance criteria, no walking skeleton, no delivery gates, or no independent review. Triggers 新项目、立项、从零开始、greenfield、开发顺序、项目流程、AGENTS.md 模板、验收清单、交付门禁.
+description: Use when starting a project from scratch, rebuilding a module, or standing up a new subsystem; when asked what order to build things in, what documents a new repo needs, or how to write or auto-create AGENTS.md rules; or when a project has no AGENTS.md, no acceptance criteria, no walking skeleton, no delivery gates, or no independent review. Triggers 新项目、立项、从零开始、greenfield、开发顺序、项目流程、AGENTS.md 模板、自动创建 AGENTS.md、验收清单、交付门禁.
 ---
 
 # okgo — 新项目开发流程
@@ -8,7 +8,7 @@ description: Use when starting a project from scratch, rebuilding a module, or s
 把「想法 → 可交付项目」固化为 **6 个阶段、3 道闸门、1 套文档**。
 
 分工只有一句：**规则写进项目根 `AGENTS.md`，执行路径写进 `docs/architecture/workflow.md`**。
-本技能同时提供这两份文件的模板与全套片段模板。
+本技能会**自动创建这两份文件**（模板在 `references/`，片段在 `assets/`），用户不需要复制粘贴。
 
 ## 三条铁律
 
@@ -27,11 +27,44 @@ description: Use when starting a project from scratch, rebuilding a module, or s
 
 **不适用**：单文件小改、修 typo、已有流程下的 L0/L1 小修（除非任务就是把流程落地到仓库）。
 
-## 落地三步（先做这个，再谈实现）
+## 启动动作：自动生成 AGENTS.md（不要让用户复制粘贴）
 
-1. `references/agents-template.md` → 复制为项目根 `AGENTS.md`；替换所有 `{{...}}` 占位符；删掉不适用的门禁，但 **lint / type-check / test / build / 依赖检查不得删**。
-2. `references/workflow-manual.md` → 复制为 `docs/architecture/workflow.md`；在 `docs/design/README.md` 的索引里登记。
-3. 按下面的阶段推进，每阶段过闸门；需要片段时从 `assets/` 取，不要手搓格式。
+当前项目没有 `AGENTS.md` 时，**由你直接创建**。禁止输出「请把模板复制到项目根」让用户自己动手。
+
+仅在任务涉及**新项目、立项或要求落地规则**时创建；用户只是咨询流程问题，不必创建。
+
+**1. 检测（命中即停）**
+
+- 项目根已有 `AGENTS.md` → 直接使用，不新建、不覆盖；
+- 向上找到仓库根 / 工作区根的 `AGENTS.md` → 使用它，不重复创建；
+- 都没有 → 进入第 2 步。
+
+**2. 生成**
+
+读取 `references/agents-template.md`，写到项目根 `AGENTS.md`。只填能确定的事实：
+
+| 占位符 | 来源 |
+|---|---|
+| `{{PROJECT_NAME}}` | `package.json` 的 `name`，否则目录名 |
+| `{{PKG_MANAGER}}` | 锁文件：`pnpm-lock.yaml`→pnpm、`yarn.lock`→yarn、`bun.lockb`→bun、`package-lock.json`→npm |
+| `{{LANGUAGE_RUNTIME}}` / `{{FRAMEWORK}}` / `{{DATABASE}}` | `package.json`、`pyproject.toml`、`go.mod`、`Cargo.toml`、`composer.json`、`.nvmrc` / `.python-version`、`docker-compose.yml`、`.env.example` |
+| `{{DEV_CMD}}` 等命令 | 只填构建文件里**真实存在**的脚本；没有就写 `待确认` |
+
+规则：
+
+- **不编造**命令、端口、数据库；确不定就写 `待确认`，并在文末追加「待确认项」清单（定稿后删除）。
+- 生成的文件里**不得残留 `{{...}}`**。
+- 删掉不适用的门禁条目，但 **lint / type-check / test / build / 依赖检查不得删**。
+
+**3. 收尾**
+
+- 回报：`已创建 <路径>`、填了哪些项、待确认几项；
+- 已有 `AGENTS.md` 时：读取并列出缺哪些章节/门禁，问是否补，**绝不整体覆盖**；
+- 不自动 commit（除非用户要求）。
+
+可选：用户需要时，用同样方式生成 `docs/architecture/workflow.md`（源：`references/workflow-manual.md`），并在 `docs/design/README.md` 登记。
+
+之后按下面的阶段推进，每阶段过闸门；需要片段时从 `assets/` 取，不要手搓格式。
 
 ## 阶段与闸门
 
@@ -83,7 +116,7 @@ Ruling: <决定> — <理由> — <错了的代价>
 |---|---|
 | `readme.md` | **使用方法与完整流程**（安装到各工具、三步落地、阶段详解、FAQ） |
 | `references/workflow-manual.md` | 完整流程手册，落地为 `docs/architecture/workflow.md` |
-| `references/agents-template.md` | `AGENTS.md` 全文模板，落地为项目根规则 |
+| `references/agents-template.md` | `AGENTS.md` 全文模板；由你读取后**自动生成**项目根 `AGENTS.md`，不是给用户复制的 |
 | `assets/task-contract.md` | 任务契约片段 |
 | `assets/acceptance-checklist.md` | 验收清单片段（功能/边界/集成/卫生） |
 | `assets/requirement.md` | Requirement + Scenario 片段 |
