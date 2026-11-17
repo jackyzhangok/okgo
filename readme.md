@@ -1,6 +1,6 @@
 # okgo — 新项目开发流程包
 
-> 新项目从零到交付的标准流程包：**6 个阶段、3 道闸门、1 套文档**。
+> “**许愿式项目开发**”[新项目从零到交付]的标准流程包：**6 个阶段、3 道闸门、1 套文档**。
 > 一份技能，四种工具通用：**WorkBuddy / Cursor / Codex / DeepSeek Harness（DSH）**，也兼容 Claude Code 等任何支持 `SKILL.md` 的 agent。
 > 本文件是**使用方法与流程图**；细则看 `references/`，片段模板看 `assets/`。
 
@@ -52,14 +52,19 @@ dist/okgo.zip                       # 打包产物：整个技能压成的分发
 
 ---
 
-## 3. 安装
+## 3. 安装与调用
 
-整个 `okgo/` 目录放进对应工具的 skills 目录即可，无需改任何内容。
+安装分两步：**把目录放进工具的技能目录**，再**按该工具的方式调用**。装好不等于会用——四个工具的调用语法不同，见 3.2 / 3.3。
+
+### 3.1 安装路径
+
+整个 `okgo/` 目录放进对应目录即可，无需改任何内容。
 
 | 工具 | 用户级（全局） | 项目级（随仓库走） |
 |---|---|---|
-| **WorkBuddy / CodeBuddy** | `~/.workbuddy/skills/okgo/` | `<项目>/.workbuddy/skills/okgo/` |
-| **Cursor** | — | `<项目>/.cursor/skills/okgo/` |
+| **WorkBuddy** | `~/.workbuddy/skills/okgo/` | `<项目>/.workbuddy/skills/okgo/` |
+| **CodeBuddy IDE** | `~/.codebuddy/skills/okgo/` | `<项目>/.codebuddy/skills/okgo/` |
+| **Cursor** | `~/.cursor/skills/okgo/` | `<项目>/.cursor/skills/okgo/` |
 | **Codex CLI** | `~/.codex/skills/okgo/` | `<项目>/.codex/skills/okgo/` |
 | **DeepSeek Harness（DSH）** | `~/.dsh/skills/okgo/` | `<仓库>/.dsh/skills/okgo/` |
 | **Claude Code** | `~/.claude/skills/okgo/` | `<项目>/.claude/skills/okgo/` |
@@ -71,14 +76,86 @@ dist/okgo.zip                       # 打包产物：整个技能压成的分发
 - **团队共享**：把技能目录提交进仓库，用项目级路径（如 `.cursor/skills/`、`.codex/skills/`），新人克隆即生效。
 - **打包分发**：`dist/okgo.zip` 可直接上传导入（WorkBuddy 支持「上传/导入技能包」），其他工具解压后放到上表目录即可。
 - **不支持 skills 的工具**：把 `SKILL.md` 的内容贴进该工具的项目规则文件（如 `.cursor/rules/*.mdc`、`AGENTS.md`、自定义 system prompt），`references/` 作为随仓库文档保留。
-- 验证是否生效：在会话里说「我要启动一个新项目」或「给我新项目的 AGENTS.md 模板」，能触发本技能即安装成功。
 
-### 安装后第一件事
+### 3.2 三种调用方式
+
+支持 `SKILL.md` 的工具都采用**渐进式披露**：平时只把 `name` + `description` 放进上下文（约 100 词），命中后才读 `SKILL.md`，`references/`、`assets/` 再按需读取。所以「装了没反应」通常是描述没命中，不是没装上。
+
+| 方式 | 怎么发生 | 什么时候用 |
+|---|---|---|
+| **自动触发** | 描述命中 `description` 里的触发词（新项目、立项、AGENTS.md、验收清单、开发顺序…） | 日常首选，最省事 |
+| **显式调用** | 用该工具的语法点名技能（见 3.3），或直接说「用 okgo 技能」 | 首轮就要用，或技能被别的技能抢走 |
+| **手动兜底** | 把 `SKILL.md` 贴进对话/规则文件，`references/` 按路径引用 | 工具不支持 skills，或临时会话 |
+
+### 3.3 各工具怎么调用
+
+| 工具 | 显式调用 | 自动触发 | 要点 |
+|---|---|---|---|
+| **WorkBuddy / CodeBuddy** | 输入 `/` 选 `okgo`；或对话里点名「用 okgo 技能」 | 描述匹配即自动调用 | `@` 是引用文件，不是调技能 |
+| **Cursor** | `/okgo` 运行；`@okgo` 作为上下文附加 | 启动时自动发现，Agent 自行判断 | `/okgo` 只作用于当前一条消息 |
+| **Codex CLI / IDE** | `$okgo`（如 `$okgo 帮我启动新项目`） | 描述匹配自动选择 | `/` 保留给内置命令，不能自定义斜杠 |
+| **DSH** | `/okgo` 斜杠命令；或说「使用 okgo 技能」 | 会话注入技能目录，命中后加载 | 模型与 `/` 默认都可调用 |
+
+#### WorkBuddy / CodeBuddy
+
+1. 在对话输入框输入 `/`，在技能列表里选 `okgo`；
+2. 或直接说：「用 okgo 技能，帮我启动一个…」；
+3. 自动触发靠 `description` 的触发词，命中「新项目 / 立项 / AGENTS.md / 验收清单」等会自行调用；
+4. 在 **设置 → Skills** 可查看、启用/禁用、导入（`dist/okgo.zip` 可直接上传）。
+
+> 装多了技能容易被别的技能抢走；这时在提示词里点名「用 okgo 技能」即可纠偏。
+
+#### Cursor
+
+1. 在 Agent 聊天框输入 `/`，搜索并选择 `okgo` —— 只附加到这一条消息；
+2. 输入 `@okgo` 把它作为上下文附加；
+3. 想整个会话常驻：选中后按 `Option+Enter`（Mac）/ `Alt+Enter`（Windows）作为 Custom Mode；
+4. 启动时 Cursor 自动发现 `.cursor/skills/`、`.agents/skills/`，也会按描述自行判断。
+
+#### Codex CLI / IDE
+
+1. 在提示词里写 `$okgo`（例：`$okgo 帮我启动新项目`）；
+2. 输入 `/skills` 查看已加载技能，确认 `okgo` 在列表里；
+3. 不提 `$okgo` 时，Codex 也会按 `description` 隐式选择；
+4. 项目级技能放 `.codex/skills/okgo/` 或 `.agents/skills/okgo/`，Codex 从仓库根扫描。
+
+> Codex 的 `/` 是内置命令（`/skills`、`/model`、`/plan` 等），**不能**用 `/okgo` 调用自定义技能——必须用 `$okgo`。
+
+#### DSH
+
+1. 输入框输入 `/` 选择技能（发送后自动加载），或直接说「使用 okgo 技能」；
+2. 模型侧：会话注入技能目录（名称+描述），命中后调用 `skill` 工具读正文；
+3. 默认 `okgo` 对模型可见、`/okgo` 可调用；如需限制，在 frontmatter 加 `disable-model-invocation: true`（模型不可见）或 `user-invocable: false`（`/` 不可用）。
+
+### 3.4 没触发时怎么办
+
+按顺序排查：
+
+1. **确认已安装**：用 3.5 的 `ls` 检查目录；
+2. **显式调用**：按 3.3 用 `/okgo`、`@okgo`、`$okgo`，或直接点名；
+3. **首句点名**：把「使用 okgo 技能」放在第一句，避免长会话里技能描述被压缩；
+4. **换短会话**：上下文过长时技能目录可能被摘要掉，新开会话再试；
+5. **手动兜底**：把 `SKILL.md` 贴进对话，或让 agent 直接读路径：
+
+```text
+读取 okgo 技能：~/.agents/skills/okgo/SKILL.md，按其中流程执行
+```
+
+### 3.5 验证安装与调用
 
 ```bash
-# 确认四个文件在（路径按你的工具替换）
+# 确认四个目录/文件都在（路径按你的工具替换）
 ls ~/.dsh/skills/okgo/{SKILL.md,readme.md,references,assets}
 ```
+
+行为信号（出现任意两条，说明已加载）：
+
+- 先要验收标准、先问 5 个问题，而不是直接写代码；
+- 提到阶段、闸门、`AGENTS.md`、验收清单；
+- 主动去读 `references/workflow-manual.md` 或 `assets/*`；
+- 交付时给命令、退出码、截图路径，而不是「应该没问题」。
+
+反信号：不问验收标准直接开写、输出泛泛的「最佳实践」→ 技能没加载，按 3.4 显式调用。
 
 ---
 
