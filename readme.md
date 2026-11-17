@@ -2,7 +2,8 @@
 
 > “**许愿式项目开发**”[新项目从零到交付]的标准流程包：**6 个阶段、3 道闸门、1 套文档**。
 > 一份技能，四种工具通用：**WorkBuddy / Cursor / Codex / DeepSeek Harness（DSH）**，也兼容 Claude Code 等任何支持 `SKILL.md` 的 agent。
-> 新项目里说一句「按 okgo 启动」，它会**自动建立 `AGENTS.md`**，不用你复制模板。
+> 安装只需一句：「安装 okgo 技能：`https://github.com/jackyzhangok/okgo`」——自动克隆、校验、软链，不用复制。
+> 新项目里说一句「按 okgo 启动」，它会**自动建立 `AGENTS.md`** 和流程文档，不用你复制模板。
 > 本文件是**使用方法与流程图**；细则看 `references/`，片段模板看 `assets/`。
 
 ---
@@ -29,11 +30,13 @@
 
 ```text
 okgo/
-├── SKILL.md                        # 技能入口：何时用、三条铁律、阶段闸门、文件导航
+├── SKILL.md                        # 技能入口：何时用、三条铁律、自动生成 AGENTS.md、阶段闸门
 ├── readme.md                       # 本文件：安装、使用方法、完整流程
 ├── references/
-│   ├── workflow-manual.md          # 完整流程手册 → 落地为 docs/architecture/workflow.md
+│   ├── workflow-manual.md          # 完整流程手册 → 自动落地为 docs/architecture/workflow.md
 │   └── agents-template.md          # 项目规则模板 → agent 自动生成为项目根 AGENTS.md
+├── scripts/
+│   └── install.sh                  # 一键安装/升级：复制、校验、软链到已有工具目录
 └── assets/
     ├── task-contract.md            # 任务契约片段
     ├── acceptance-checklist.md     # 验收清单片段（功能/边界/集成/卫生）
@@ -55,11 +58,42 @@ dist/okgo.zip                       # 打包产物：整个技能压成的分发
 
 ## 3. 安装与调用
 
-安装分两步：**把目录放进工具的技能目录**，再**按该工具的方式调用**。装好不等于会用——四个工具的调用语法不同，见 3.2 / 3.3。
+安装分两步：**把技能放到工具能找到的位置**，再**按该工具的方式调用**。装好不等于会用——四个工具的调用语法不同，见 3.2 / 3.3。
+
+### 3.0 一条指令安装（零复制，推荐）
+
+对 agent 直接说：
+
+```text
+安装 okgo 技能：https://github.com/jackyzhangok/okgo
+```
+
+它会自己完成：克隆到 `~/.agents/skills/okgo` → 校验 `name: okgo` 与必备文件 → 给**已存在**的工具技能目录建软链 → 报告调用方式。你不用复制、解压、建软链。
+
+想自己敲命令也可以，一行：
+
+```bash
+git clone --depth 1 https://github.com/jackyzhangok/okgo.git ~/.agents/skills/okgo \
+  && bash ~/.agents/skills/okgo/scripts/install.sh
+```
+
+`scripts/install.sh` 做四件事：
+
+1. 复制 `SKILL.md` / `readme.md` / `references/` / `assets/` / `scripts/`；
+2. 校验技能名与必备文件，不一致就报错退出；
+3. 对 `~/.dsh/skills`、`~/.agents/skills`、`~/.cursor/skills`、`~/.codex/skills`、`~/.claude/skills`、`~/.workbuddy/skills`、`~/.codebuddy/skills` 中**已存在**的目录建 `okgo` 软链；已存在的同名目录**不覆盖**；
+4. 打印 `/okgo`、`$okgo`、`@okgo` 的调用提示。
+
+| 需求 | 命令 |
+|---|---|
+| 默认安装（跨工具共用目录） | `bash scripts/install.sh` |
+| 装到指定工具 | `bash scripts/install.sh ~/.dsh/skills/okgo` |
+| 只安装、不建软链 | `bash scripts/install.sh --no-link` |
+| 升级 | 再跑一次（覆盖技能文件；不动项目里的 `AGENTS.md`） |
 
 ### 3.1 安装路径
 
-整个 `okgo/` 目录放进对应目录即可，无需改任何内容。
+整个 `okgo/` 目录放进对应目录即可，无需改任何内容。推荐直接用 3.0 的脚本，它会一次装好并建好软链。
 
 | 工具 | 用户级（全局） | 项目级（随仓库走） |
 |---|---|---|
@@ -161,7 +195,19 @@ ls ~/.dsh/skills/okgo/{SKILL.md,readme.md,references,assets}
 
 ---
 
-## 4. 使用方法：落地到新项目（三步）
+## 4. 使用方法：落地到新项目
+
+**自动化边界**（能自动的都不让你动手）：
+
+| 动作 | 谁做 |
+|---|---|
+| 安装 / 升级技能 | agent 自动（`scripts/install.sh`） |
+| 检测并创建 `AGENTS.md` | agent 自动，已有不覆盖 |
+| 填充占位符 / 标注待确认 | agent 自动，不编造 |
+| 落地 `docs/architecture/workflow.md` + 索引 | agent 自动，已存在跳过 |
+| 阶段 0 文档骨架 | agent 自动，不覆盖已有 |
+| 新增依赖 / 改门禁 / 合并 / 推送 / 发布 | 需你确认 |
+| 视觉方向 / 合并策略 | 你选择 |
 
 ### 步骤 1：立规则（agent 自动完成，不用复制）
 
@@ -183,16 +229,22 @@ cp ~/.agents/skills/okgo/references/agents-template.md ./AGENTS.md
 
 然后替换全部 `{{PLACEHOLDER}}`（见第 8 节）；删除不适用的门禁——**但 `lint` / `type-check` / `test` / `build` / 依赖检查不得删**；没有 UI 的项目删掉设计/截图相关条款。
 
-### 步骤 2：立流程
+### 步骤 2：立流程（同样自动）
 
-对 agent 说「落地流程手册」即可（它会复制并登记索引）；手动兜底：
+启动时 agent 会顺带完成，无需你操作：
+
+- 生成 `docs/architecture/workflow.md`（源：`references/workflow-manual.md`）；
+- 不存在 `docs/design/README.md` 时创建，并登记 workflow 的索引行；
+- 已存在则跳过，不覆盖。
+
+手动兜底：
 
 ```bash
 mkdir -p docs/architecture docs/design
 cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflow.md
 ```
 
-并在 `docs/design/README.md` 的索引里登记一行。之后团队流程演进只改这一份。
+之后团队流程演进只改这一份。
 
 ### 步骤 3：按阶段推进
 
@@ -401,8 +453,8 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 ## 11. 维护
 
 - **单一来源**：手册只维护 `references/workflow-manual.md`，项目侧副本是它的落地版；团队流程变更先改技能，再同步到各仓库。
-- **升级方式**：覆盖 `references/` 与 `assets/` 后，对比项目里已落地的 `AGENTS.md` 差异，逐条并入——**不要整体覆盖项目规则**。
-- **兼容性**：只用 Markdown + YAML frontmatter，无脚本、无外部依赖，任何读取 SKILL.md 的 agent 都能用。
+- **升级方式**：说「升级 okgo」或重跑 `bash scripts/install.sh`；技能文件整体更新，但**项目里的 `AGENTS.md` 不动**——按需对比差异逐条并入，不要整体覆盖。
+- **兼容性**：只用 Markdown + YAML frontmatter；唯一的脚本是 `scripts/install.sh`（安装/升级用，可跳过），没有运行时依赖。
 - **版本建议**：在发布页记录「技能版本 / 变更点」，项目 `AGENTS.md` 可加一行 `Workflow: okgo vX.Y`。
 
 ---
@@ -411,6 +463,12 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 **Q：必须把两份文档都放进项目吗？**
 A：`AGENTS.md` 必须（规则要被 agent 读到）；`docs/architecture/workflow.md` 强烈建议（人和 AI 都靠它对齐顺序）。只放一份时优先 `AGENTS.md`。
+
+**Q：怎么安装和升级？**
+A：对 agent 说「安装 okgo 技能：https://github.com/jackyzhangok/okgo」或「升级 okgo」即可；它会调 `scripts/install.sh` 完成复制、校验、软链。升级只动技能文件，不动项目里的 `AGENTS.md`。
+
+**Q：安装脚本会不会覆盖我工具目录里已有的同名技能？**
+A：不会。脚本只在目标工具目录里**新建** `okgo` 软链；遇到已有同名目录或链接就跳过并报告。安装目标本身（默认 `~/.agents/skills/okgo`）视为升级，会被更新。
 
 **Q：新项目还没有 `AGENTS.md`，要我先复制模板吗？**
 A：不用。agent 会自动检测并创建；连 `package.json` 都没有的空仓库也能生成，命令项标 `待确认`，等阶段 0 定稿再补。你只需要回答它问的那 2–3 个问题。

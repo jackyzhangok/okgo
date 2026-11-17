@@ -62,9 +62,38 @@ description: Use when starting a project from scratch, rebuilding a module, or s
 - 已有 `AGENTS.md` 时：读取并列出缺哪些章节/门禁，问是否补，**绝不整体覆盖**；
 - 不自动 commit（除非用户要求）。
 
-可选：用户需要时，用同样方式生成 `docs/architecture/workflow.md`（源：`references/workflow-manual.md`），并在 `docs/design/README.md` 登记。
+**4. 一并落地流程文档（默认执行，已存在则跳过）**
+
+- `docs/architecture/workflow.md` ← `references/workflow-manual.md`；
+- `docs/design/README.md`：不存在则创建，并登记 workflow 的索引行；
+- 阶段 0 的其余骨架（`readme.md` / `prd.md` / `project_plan.md` / `docs/plans/` / `changes/` / `artifacts/ui/`）在用户确认「按阶段 0 起步」后创建，**不覆盖已有文件**。
 
 之后按下面的阶段推进，每阶段过闸门；需要片段时从 `assets/` 取，不要手搓格式。
+
+## 安装 / 升级自己（不要让用户复制目录）
+
+用户说「安装 okgo」「升级 okgo」「装到某工具」时，**你直接执行**：复制、校验、建软链、报告调用方式。
+
+```bash
+# 已有本仓库
+bash scripts/install.sh
+
+# 只有 GitHub 地址
+git clone --depth 1 https://github.com/jackyzhangok/okgo.git ~/.agents/skills/okgo
+bash ~/.agents/skills/okgo/scripts/install.sh
+
+# 装到指定工具
+bash scripts/install.sh ~/.dsh/skills/okgo
+```
+
+脚本行为（已是默认）：
+
+- 复制 `SKILL.md` / `readme.md` / `references/` / `assets/` / `scripts/`；
+- 校验 `name: okgo` 与必备文件，失败即报错退出；
+- 对**已存在**的工具技能目录建 `okgo` 软链；已存在的同名目录**不覆盖**，只报告；
+- 打印 `/okgo`、`$okgo`、`@okgo` 的调用提示。
+
+禁止：让用户自己解压/复制目录、让用户手动建软链、安装后不验证。
 
 ## 阶段与闸门
 
@@ -115,6 +144,7 @@ Ruling: <决定> — <理由> — <错了的代价>
 | 文件 | 用途 |
 |---|---|
 | `readme.md` | **使用方法与完整流程**（安装到各工具、三步落地、阶段详解、FAQ） |
+| `scripts/install.sh` | **一键安装/升级**：复制、校验、软链到已有工具目录、打印调用方式 |
 | `references/workflow-manual.md` | 完整流程手册，落地为 `docs/architecture/workflow.md` |
 | `references/agents-template.md` | `AGENTS.md` 全文模板；由你读取后**自动生成**项目根 `AGENTS.md`，不是给用户复制的 |
 | `assets/task-contract.md` | 任务契约片段 |
