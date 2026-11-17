@@ -1,6 +1,6 @@
 ---
 name: okgo
-description: Use when starting a project from scratch, rebuilding a module, or standing up a new subsystem; when asked what order to build things in, what documents a new repo needs, or how to write or auto-create AGENTS.md rules; or when a project has no AGENTS.md, no acceptance criteria, no walking skeleton, no delivery gates, or no independent review. Triggers 新项目、立项、从零开始、greenfield、开发顺序、项目流程、AGENTS.md 模板、自动创建 AGENTS.md、验收清单、交付门禁.
+description: Use when starting a project from scratch, rebuilding a module, or standing up a new subsystem; when asked what order to build things in, what documents a new repo needs, or how to write or auto-create AGENTS.md rules; when a project has no AGENTS.md, no acceptance criteria, no walking skeleton, no delivery gates, or no independent review; or when the user asks to go from one sentence to working software without stopping. Triggers 新项目、立项、从零开始、greenfield、开发顺序、项目流程、AGENTS.md 模板、自动创建 AGENTS.md、验收清单、交付门禁、许愿模式、一路做完、不用问我、wish mode.
 ---
 
 # okgo — 新项目开发流程
@@ -17,6 +17,17 @@ description: Use when starting a project from scratch, rebuilding a module, or s
 3. **没有独立复核，不宣布完成。**
 
 违反任一条时，回到上一步，不要「先做着看」。
+
+## 两种执行模式
+
+| 模式 | 触发 | 行为 |
+|---|---|---|
+| `guided`（默认） | 未特别说明 | 三闸门等人确认，七个决策点逐项拍板 |
+| `wish`（许愿模式） | 「许愿模式」「一路做完」「不用问我，做完给我看」「wish mode」 | 默认决策 + 假设账本 + 闸门自检 + 自动独立复核；只在硬停条件停 |
+
+- wish 模式完整协议：`references/wish-mode.md`；假设模板：`assets/assumption-ledger.md`。
+- wish 模式**仍然生效**：三条铁律、TDD、验收清单、独立复核、证据要求。变的只是「谁拍板」，不是「要不要验证」。
+- 没有明确触发语时，不要自行升格为 wish 模式。
 
 ## 何时使用
 
@@ -107,6 +118,8 @@ bash scripts/install.sh ~/.dsh/skills/okgo
 | 5 | 自动闸门 | `check` + `build` + `serve` + E2E + 截图 + 卫生扫描 | 全绿且有本次证据 |
 | 6 | 独立复核 | 验收条目表 + 缺陷单 → 修复 → 再复核 → 交付卡片 | **闸门 3：独立复核通过** |
 
+wish 模式下：闸门 1 / 2 改为**自检 + 记录**（不阻塞），闸门 3 由**独立复核自动执行**（最多自动修 2 轮）；阶段与产出不变。
+
 ## 不可协商的约束
 
 - **规模预算**：单次变更 ≤8 文件、净增 ≤400 行；超出**动手前**确认并拆分。
@@ -117,9 +130,11 @@ bash scripts/install.sh ~/.dsh/skills/okgo
 - **永不编造**：API、路径、命令、依赖名、测试结果，不确定就查或说不知道。
 - **复核者不改代码**，改了就要换人复核；L2 不得自我豁免。
 
-## 需要用户拍板时才停
+## 什么时候停下来
 
-worktree 是否隔离、执行方式（单人 / 每 task 双上下文）、加依赖、超预算、改门禁阈值或基线、UI 视觉方向、合并策略。
+**guided 模式**：worktree 是否隔离、执行方式（单人 / 每 task 双上下文）、加依赖、超预算、改门禁阈值或基线、UI 视觉方向、合并策略。
+
+**wish 模式**：只在硬停条件停——不可逆/破坏性、安全敏感、外部副作用（推送/PR/部署/发布）、需付费或系统级安装、预算超 3 倍、需求自相矛盾无默认、环境不可用、复核 2 轮不通过、用户打断。停下必须给：卡点 / 已尝试 / 可选方案（含默认推荐）/ 继续所需的最小输入。
 
 其余情况（规格未覆盖的取舍）**不要停下来问**：做决定并留痕。
 
@@ -146,9 +161,11 @@ Ruling: <决定> — <理由> — <错了的代价>
 | `readme.md` | **使用方法与完整流程**（安装到各工具、三步落地、阶段详解、FAQ） |
 | `scripts/install.sh` | **一键安装/升级**：复制、校验、软链到已有工具目录、打印调用方式 |
 | `references/workflow-manual.md` | 完整流程手册，落地为 `docs/architecture/workflow.md` |
+| `references/wish-mode.md` | **许愿模式完整协议**：默认决策表、自检闸门、自动复核、硬停条件 |
 | `references/agents-template.md` | `AGENTS.md` 全文模板；由你读取后**自动生成**项目根 `AGENTS.md`，不是给用户复制的 |
 | `assets/task-contract.md` | 任务契约片段 |
 | `assets/acceptance-checklist.md` | 验收清单片段（功能/边界/集成/卫生） |
+| `assets/assumption-ledger.md` | 假设账本片段（wish 模式必填） |
 | `assets/requirement.md` | Requirement + Scenario 片段 |
 | `assets/plan-task.md` | 计划中的单个 task 片段 |
 | `assets/delivery-card.md` | 交付卡片片段 |

@@ -4,6 +4,7 @@
 > 一份技能，四种工具通用：**WorkBuddy / Cursor / Codex / DeepSeek Harness（DSH）**，也兼容 Claude Code 等任何支持 `SKILL.md` 的 agent。
 > 安装只需一句：「安装 okgo 技能：`https://github.com/jackyzhangok/okgo`」——自动克隆、校验、软链，不用复制。
 > 新项目里说一句「按 okgo 启动」，它会**自动建立 `AGENTS.md`** 和流程文档，不用你复制模板。
+> 想「一句话做完」，说「**许愿模式**」：默认决策 + 自检闸门 + 自动复核（见第 6 节）。
 > 本文件是**使用方法与流程图**；细则看 `references/`，片段模板看 `assets/`。
 
 ---
@@ -34,12 +35,14 @@ okgo/
 ├── readme.md                       # 本文件：安装、使用方法、完整流程
 ├── references/
 │   ├── workflow-manual.md          # 完整流程手册 → 自动落地为 docs/architecture/workflow.md
+│   ├── wish-mode.md                # 许愿模式协议：默认决策、自检闸门、自动复核、硬停条件
 │   └── agents-template.md          # 项目规则模板 → agent 自动生成为项目根 AGENTS.md
 ├── scripts/
 │   └── install.sh                  # 一键安装/升级：复制、校验、软链到已有工具目录
 └── assets/
     ├── task-contract.md            # 任务契约片段
     ├── acceptance-checklist.md     # 验收清单片段（功能/边界/集成/卫生）
+    ├── assumption-ledger.md        # 假设账本片段（wish 模式必填）
     ├── requirement.md              # Requirement + Scenario 片段
     ├── plan-task.md                # 计划中的单个 task 片段
     ├── delivery-card.md            # 交付卡片片段
@@ -186,6 +189,7 @@ ls ~/.dsh/skills/okgo/{SKILL.md,readme.md,references,assets}
 行为信号（出现任意两条，说明已加载）：
 
 - 发现没有 `AGENTS.md` 时**直接创建**，而不是让你去复制模板；
+- 许愿模式下先给**假设账本**，再开工，不反复确认可推断的信息；
 - 先要验收标准、先问 5 个问题，而不是直接写代码；
 - 提到阶段、闸门、`AGENTS.md`、验收清单；
 - 主动去读 `references/workflow-manual.md` 或 `assets/*`；
@@ -206,6 +210,7 @@ ls ~/.dsh/skills/okgo/{SKILL.md,readme.md,references,assets}
 | 填充占位符 / 标注待确认 | agent 自动，不编造 |
 | 落地 `docs/architecture/workflow.md` + 索引 | agent 自动，已存在跳过 |
 | 阶段 0 文档骨架 | agent 自动，不覆盖已有 |
+| 七个决策点（wish 模式） | agent 按默认表执行，记入假设账本 |
 | 新增依赖 / 改门禁 / 合并 / 推送 / 发布 | 需你确认 |
 | 视觉方向 / 合并策略 | 你选择 |
 
@@ -227,7 +232,7 @@ ls ~/.dsh/skills/okgo/{SKILL.md,readme.md,references,assets}
 cp ~/.agents/skills/okgo/references/agents-template.md ./AGENTS.md
 ```
 
-然后替换全部 `{{PLACEHOLDER}}`（见第 8 节）；删除不适用的门禁——**但 `lint` / `type-check` / `test` / `build` / 依赖检查不得删**；没有 UI 的项目删掉设计/截图相关条款。
+然后替换全部 `{{PLACEHOLDER}}`（见第 9 节）；删除不适用的门禁——**但 `lint` / `type-check` / `test` / `build` / 依赖检查不得删**；没有 UI 的项目删掉设计/截图相关条款。
 
 ### 步骤 2：立流程（同样自动）
 
@@ -255,6 +260,8 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 ---
 
 ## 5. 完整流程
+
+> 默认 `guided`：按下面的阶段走，闸门等你确认。想「一句话做完」，用第 6 节的许愿模式；阶段与产出相同，只是闸门改为自检、决策按默认表。
 
 ```text
 想法
@@ -373,7 +380,71 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 ---
 
-## 6. 三道闸门
+## 6. 许愿模式（wish mode）
+
+一句话交付的可选模式。默认仍是 guided（三闸门）；**只有你说出触发语才切换**。
+
+```text
+许愿模式：做一个 <需求>，一路做完，不用问我
+```
+
+### 6.1 它改了什么
+
+| | guided（默认） | wish |
+|---|---|---|
+| 闸门 1 契约 | 等你确认 | 自检 + 记录，继续 |
+| 闸门 2 设计 | 等你 review | 自检 + 记录，继续 |
+| 闸门 3 复核 | 独立复核 | 独立复核自动触发，最多修 2 轮 |
+| 七个决策点 | 逐项问你 | 按默认表执行，记入假设账本 |
+| 需求提问 | 一次一个 | 最多 3 个方向性问题，一次问完；不答按默认 |
+| 停下来 | 每个闸门 | 只在硬停条件 |
+
+**不变的**：三条铁律、TDD、验收清单、独立复核、证据要求。wish 只改「谁拍板」，不改「要不要验证」。
+
+### 6.2 默认决策（节选）
+
+| 决策 | 默认 |
+|---|---|
+| 工作区 | 已有仓库建分支；新项目 `git init` + 本地提交 |
+| 依赖 | 默认不加；必须加时选最小可用并记入账本 |
+| 预算 | 每 task ≤8 文件 / 400 行；超出拆批 |
+| 门禁 | 不放宽、不改阈值 |
+| 视觉 | 给 2 个方向，按信息密度与惯例选 1 |
+| 数据 | 本地替代（SQLite / 内存 / 样例） |
+| 合并 | 保留分支，不推送不合并 |
+| 部署 | 不做 |
+
+完整表与规则：`references/wish-mode.md`；假设模板：`assets/assumption-ledger.md`。
+
+### 6.3 它仍会停下来
+
+不可逆/破坏性、安全敏感、外部副作用（推送/PR/部署/发布）、付费或系统级安装、预算超 3 倍、需求自相矛盾且无合理默认、环境不可用、复核 2 轮不通过、你打断。
+
+停下时给：卡点 / 已尝试 / 可选方案（含默认推荐）/ 继续所需的最小输入。
+
+### 6.4 你会拿到什么
+
+- 本地可运行的主流程（真实入口）；
+- 本次运行的测试与门禁证据（命令、退出码、关键输出）；
+- 有 UI 时的截图（默认/空/错误/加载）；
+- 假设账本 + 未验证清单；
+- 交付报告 + 下一步建议（推送/合并需你确认）。
+
+### 6.5 边界
+
+- **能到**：MVP、内部工具、已有仓库的新功能——「一句话 → 可演示 + 有测试 + 有截图」。
+- **到不了**：上线级质量、生产部署、品牌级视觉、合规/支付/多租户权限这类必须人判断的部分。
+- 一句话质量决定结果：**目标 + 一个动词 + 硬约束**效果最好。
+
+### 6.6 切回 guided
+
+说「停」「一步一步来」「先确认」立即回到三闸门；已完成部分作为输入，不推倒重来。
+
+---
+
+## 7. 三道闸门
+
+> 以下是 `guided`（默认）的闸门。`wish` 模式下闸门 1 / 2 改为自检 + 记录，闸门 3 由独立复核自动执行，见第 6 节。
 
 | 闸门 | 时机 | 通过条件 | 不通过怎么办 |
 |---|---|---|---|
@@ -383,7 +454,7 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 ---
 
-## 7. 规模分级
+## 8. 规模分级
 
 | 级别 | 判定 | 最低流程 | 复核 |
 |---|---|---|---|
@@ -395,7 +466,7 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 ---
 
-## 8. 占位符
+## 9. 占位符
 
 替换 `AGENTS.md` 中的占位符（`{{...}}` 全部替换，不保留）：
 
@@ -417,7 +488,7 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 ---
 
-## 9. 按项目情况裁剪
+## 10. 按项目情况裁剪
 
 | 情况 | 怎么改 |
 |---|---|
@@ -430,7 +501,7 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 ---
 
-## 10. 与已有技能的关系
+## 11. 与已有技能的关系
 
 本技能负责**顺序与文档骨架**，不替代具体方法技能：
 
@@ -450,7 +521,7 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 ---
 
-## 11. 维护
+## 12. 维护
 
 - **单一来源**：手册只维护 `references/workflow-manual.md`，项目侧副本是它的落地版；团队流程变更先改技能，再同步到各仓库。
 - **升级方式**：说「升级 okgo」或重跑 `bash scripts/install.sh`；技能文件整体更新，但**项目里的 `AGENTS.md` 不动**——按需对比差异逐条并入，不要整体覆盖。
@@ -459,7 +530,13 @@ cp ~/.agents/skills/okgo/references/workflow-manual.md docs/architecture/workflo
 
 ---
 
-## 12. FAQ
+## 13. FAQ
+
+**Q：许愿模式真的什么都不问？**
+A：最多问 3 个决定方向的问题（目标用户/核心动词、硬约束、交付边界），一次问完并给默认答案；你不答就按默认走。其余写成假设账本，交付时一起给你审。它不会在可推断的信息上反复确认。
+
+**Q：许愿模式能把项目做到上线吗？**
+A：不能。它做到「本地可运行 + 已验证范围 + 证据齐全」；部署、推送、合并、品牌级视觉、合规与支付仍需你确认。
 
 **Q：必须把两份文档都放进项目吗？**
 A：`AGENTS.md` 必须（规则要被 agent 读到）；`docs/architecture/workflow.md` 强烈建议（人和 AI 都靠它对齐顺序）。只放一份时优先 `AGENTS.md`。
@@ -490,7 +567,7 @@ A：不。门禁只证明最低门槛；功能靠验收清单，边界靠用例�
 
 ---
 
-## 13. 参考
+## 14. 参考
 
 - Agent Skills 规范：<https://agentskills.io/specification>
 - Cursor Skills 文档：<https://cursor.com/docs/agent-sdk/reference/skills>
